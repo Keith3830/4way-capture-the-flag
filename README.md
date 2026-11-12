@@ -6,27 +6,11 @@ Four teams — Red, Blue, Yellow, and Pink — share one field. Each team is try
 
 ## Play now
 
-Start the server and open [http://localhost:3847](http://localhost:3847) in a browser.
+The game is live at [https://fourway-ctf-london-daly.onrender.com](https://fourway-ctf-london-daly.onrender.com).
 
-```bash
-cd 4way-ctf
-npm install
-npm test
-npm start
-```
+This is a Render **free-tier** web service. After about 15 minutes with no traffic, the instance goes to sleep. The first visit after that can take about 30 to 60 seconds to wake up — wait for the splash screen rather than assuming it is down. Open games are also lost when the service sleeps or restarts, because rooms live in memory.
 
-### A temporary public URL
-
-On a normal home or cloud network, you can share a short-lived HTTPS link with friends:
-
-```bash
-./scripts/start-public.sh
-```
-
-That runs [Cloudflare's quick tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/) (`cloudflared tunnel --url http://localhost:3847`) and prints a `https://….trycloudflare.com` address. The link lasts **only while that process and this computer stay running**. It does not need a Cloudflare account.
-
-If `cloudflared` cannot reach the Cloudflare edge (some restricted or sandboxed networks intercept those connections), use the local URL above or deploy the app permanently.
-
+Source: [github.com/Keith3830/4way-capture-the-flag](https://github.com/Keith3830/4way-capture-the-flag).
 
 ## Run locally
 
@@ -74,13 +58,17 @@ What you need:
 
 ### Render
 
-1. Push this folder to a Git repository.
-2. Create a new **Web Service** from that repo.
-3. Build command: `npm install`
-4. Start command: `npm start`
-5. Set the instance to stay running (not a sleep-after-idle free web service if you want rooms to survive).
+This game is already deployed as a free-plan Node web service:
 
-A `Procfile` with `web: npm start` is included for hosts that look for one.
+- Live URL: [https://fourway-ctf-london-daly.onrender.com](https://fourway-ctf-london-daly.onrender.com)
+- Repo: [https://github.com/Keith3830/4way-capture-the-flag](https://github.com/Keith3830/4way-capture-the-flag)
+- Build command: `npm ci`
+- Start command: `npm start`
+- Health check: `/health`
+
+The free plan sleeps after about 15 minutes idle, with a 30–60 second cold start, and in-memory rooms do not survive sleep or a restart. A paid always-on instance would be needed if you want matches to stay up between visits. A `Procfile` with `web: npm start` is included for hosts that look for one.
+
+To deploy a fresh copy, create a new Web Service from this repo's `main` branch, use those build and start commands, and leave the plan on **free** unless you intentionally upgrade.
 
 ### Fly.io
 
