@@ -32,7 +32,7 @@ Then open [http://localhost:3847](http://localhost:3847). The server listens on 
 - **Quick Play** puts you in a public room with strangers; empty seats fill with AI bots after a short wait, or the host can start sooner.
 - **Solo vs Bots** starts a match immediately with you plus AI teammates and rivals.
 
-Use **W A S D** or the arrow keys to run (or the on-screen joystick on a phone). Walking onto a bag of your color picks it up. Walking into your own cone zone deposits it. Tagging and rescuing happen automatically when you touch another player.
+Use **W A S D** or the arrow keys to run. On a phone, press and drag anywhere on the **left half** of the screen — a yellow stick appears under your thumb. Drag in the direction you want to run. Walking onto a bag of your color picks it up. Walking into your own cone zone deposits it. Tagging and rescuing happen automatically when you touch another player.
 
 ### The rules, short form
 

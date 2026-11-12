@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "4 Way Capture the Flag by London Daly — a four-team online bean-bag capture game.",
+  "description": "4 Way Capture the Flag by London Daly \u2014 a four-team online bean-bag capture game.",
   "scripts": {
     "start": "node server/index.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "test:e2e": "node --test test/e2e/*.test.js",
+    "test:all": "npm test && npm run test:e2e"
   },
   "engines": {
     "node": ">=18"

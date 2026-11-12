@@ -1,5 +1,5 @@
 import { connect } from "./net.js";
-import { createInput } from "./input.js";
+import { createInput, haptic } from "./input.js";
 import { createRenderer } from "./render.js";
 import { play, startMusic, toggleMute, isMuted, unlock } from "./audio.js";
 
@@ -244,6 +244,7 @@ function leaveToMenu() {
   }
   cancelAnimationFrame(anim);
   input?.hideJoystick();
+  document.body.classList.remove("playing");
   myId = null;
   myToken = null;
   roomCode = null;
@@ -278,7 +279,10 @@ function onState(msg) {
     for (const ev of state.events) {
       if (ev.type === "pickup") play("pickup");
       if (ev.type === "deposit") play("deposit");
-      if (ev.type === "tag") play("tag");
+      if (ev.type === "tag") {
+        play("tag");
+        if (ev.targetId === myId) haptic(50);
+      }
       if (ev.type === "rescue") play("rescue");
     }
   }
@@ -312,15 +316,26 @@ function onGameOver(msg) {
     root.appendChild(card);
   }
   input?.hideJoystick();
+  document.body.classList.remove("playing");
   show("over");
 }
 
 function enterGame() {
   show("game");
+  document.body.classList.add("playing");
   const canvas = $("field");
   if (!renderer) renderer = createRenderer(canvas);
   else renderer.resize();
-  if (!input) input = createInput($("joystick"), $("joystick-knob"));
+  if (!input) {
+    input = createInput({
+      moveZone: $("joystick"),
+      base: $("joystick-base"),
+      knob: $("joystick-knob"),
+      lookZone: $("look-pad"),
+      getYaw: () => 0,
+      lookEnabled: () => false,
+    });
+  }
   input.showJoystick();
   $("touch-hint").classList.toggle("hidden", !input.usesTouch());
   updateHud();
@@ -333,6 +348,7 @@ function loop() {
   if (renderer && state) renderer.frame(state, myId, state.now || 0);
   const dir = input ? input.dir() : { dx: 0, dy: 0 };
   const t = performance.now();
+  // Send immediately on change, and at least once per 40ms (~server tick) while held.
   if (t - lastSent.at > 40 || dir.dx !== lastSent.dx || dir.dy !== lastSent.dy) {
     lastSent = { ...dir, at: t };
     net?.send({ type: "input", dx: dir.dx, dy: dir.dy });
@@ -377,3 +393,14 @@ $("btn-mute").addEventListener("click", () => {
 });
 
 window.addEventListener("pointerdown", () => unlock(), { once: true });
+
+window.__ctf = () => {
+  const me = state?.players?.find((p) => p.id === myId) || null;
+  return {
+    myId,
+    phase: state?.phase || null,
+    dir: input ? input.dir() : { dx: 0, dy: 0 },
+    held: input ? input.isHeld() : false,
+    player: me ? { id: me.id, x: me.x, y: me.y, team: me.team } : null,
+  };
+};
