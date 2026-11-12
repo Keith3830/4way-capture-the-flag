@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#071433" />
+    <title>4 Way Capture the Flag by London Daly</title>
+    <link rel="icon" href="/assets/logo.jpg" />
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <section id="screen-splash" class="screen">
+        <img class="logo" src="/assets/logo.jpg" alt="4 Way Capture the Flag by London Daly" />
+        <p class="blurb">
+          Four teams. One sunny field. Six bean bags stand between you and the win.
+          Gather every bag that matches your team — they start in the other corners,
+          behind a ring of cones. Guard, run, and rescue your friends.
+        </p>
+        <p class="credit">A game by London Daly</p>
+        <button class="btn primary" id="btn-enter" type="button">Play</button>
+      </section>
+
+      <section id="screen-menu" class="screen hidden">
+        <img class="logo small" src="/assets/logo.jpg" alt="4 Way Capture the Flag" />
+        <label class="field">
+          Your name
+          <input id="player-name" maxlength="16" placeholder="Player" autocomplete="nickname" />
+        </label>
+        <div class="menu-grid">
+          <button class="btn primary" id="btn-create" type="button">Create private room</button>
+          <button class="btn" id="btn-join" type="button">Join with a code</button>
+          <button class="btn" id="btn-quick" type="button">Quick Play</button>
+          <button class="btn" id="btn-solo" type="button">Solo vs Bots</button>
+        </div>
+        <p class="hint">Invite friends with a room code, jump into a public match, or practice against AI teammates.</p>
+        <button class="link" id="btn-back-splash" type="button">Back</button>
+      </section>
+
+      <section id="screen-setup" class="screen hidden">
+        <h1 id="setup-title">New room</h1>
+        <div id="setup-code-row" class="hidden">
+          <label class="field">
+            Room code
+            <input id="join-code" maxlength="6" placeholder="ABCD" autocapitalize="characters" autocomplete="off" />
+          </label>
+        </div>
+        <div id="setup-host-options">
+          <label class="field">
+            Players per team
+            <select id="team-size">
+              <option value="2">2 players</option>
+              <option value="3" selected>3 players</option>
+            </select>
+          </label>
+          <label class="field">
+            Match length
+            <select id="match-length">
+              <option value="600" selected>10 minutes</option>
+              <option value="900">15 minutes</option>
+              <option value="1200">20 minutes</option>
+            </select>
+          </label>
+          <label class="field">
+            Bot difficulty
+            <select id="difficulty">
+              <option value="easy">Easy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+        </div>
+        <p class="label">Your team</p>
+        <div class="team-picks" id="setup-teams"></div>
+        <div class="row">
+          <button class="btn primary" id="btn-setup-go" type="button">Continue</button>
+          <button class="btn ghost" id="btn-setup-back" type="button">Back</button>
+        </div>
+        <p class="error" id="setup-error"></p>
+      </section>
+
+      <section id="screen-lobby" class="screen hidden">
+        <h1>Room <span id="lobby-code">----</span></h1>
+        <p class="hint" id="lobby-share">Share this code with friends so they can join.</p>
+        <p class="meta" id="lobby-settings"></p>
+        <div id="lobby-teams" class="lobby-teams"></div>
+        <div class="row">
+          <button class="btn primary hidden" id="btn-start" type="button">Start match</button>
+          <button class="btn" id="btn-ready" type="button">I'm ready</button>
+          <button class="btn ghost" id="btn-leave-lobby" type="button">Leave</button>
+        </div>
+        <p class="hint" id="lobby-wait"></p>
+        <p class="error" id="lobby-error"></p>
+      </section>
+
+      <section id="screen-game" class="screen game hidden">
+        <div id="hud">
+          <div id="hud-scores"></div>
+          <div id="hud-center">
+            <div id="hud-timer">10:00</div>
+            <div id="hud-status"></div>
+          </div>
+          <div id="hud-tools">
+            <button class="icon-btn" id="btn-mute" type="button" aria-label="Mute">Sound on</button>
+            <button class="icon-btn" id="btn-leave-game" type="button">Leave</button>
+          </div>
+        </div>
+        <canvas id="field"></canvas>
+        <div id="joystick" class="hidden">
+          <div id="joystick-base"><div id="joystick-knob"></div></div>
+        </div>
+        <div id="touch-hint" class="hidden">Drag the left pad to run. Pickup, deposit, and tags happen when you touch them.</div>
+      </section>
+
+      <section id="screen-over" class="screen hidden">
+        <h1 id="over-title">Game over</h1>
+        <p id="over-reason" class="blurb"></p>
+        <div id="over-scores" class="lobby-teams"></div>
+        <div class="row">
+          <button class="btn primary" id="btn-again" type="button">Back to menu</button>
+        </div>
+      </section>
+    </div>
+    <p id="toast" class="hidden" role="status"></p>
+    <script type="module" src="/js/main.js"></script>
+  </body>
+</html>

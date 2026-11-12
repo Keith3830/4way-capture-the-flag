@@ -1,0 +1,18 @@
+{
+  "name": "4way-ctf",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "4 Way Capture the Flag by London Daly — a four-team online bean-bag capture game.",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  }
+}
