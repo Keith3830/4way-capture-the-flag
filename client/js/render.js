@@ -337,5 +337,26 @@ export function createRenderer(canvas) {
     return pal[n];
   }
 
-  return { frame, resize };
+  function project(fieldX, fieldY) {
+    const w = canvas.width;
+    const h = canvas.height;
+    const pad = Math.max(18, Math.min(w, h) * 0.04);
+    const size = Math.min(w, h) - pad * 2;
+    const ox = (w - size) / 2;
+    const oy = (h - size) / 2 + 10 * dpr;
+    const s = size / FIELD;
+    const cssW = canvas.clientWidth || window.innerWidth || 1;
+    const cssH = canvas.clientHeight || window.innerHeight || 1;
+    const x = (ox + fieldX * s) / dpr;
+    const y = (oy + fieldY * s) / dpr;
+    return {
+      x,
+      y,
+      ndcX: (x / cssW) * 2 - 1,
+      ndcY: 1 - (y / cssH) * 2,
+      behind: false,
+    };
+  }
+
+  return { frame, resize, project, is3d: false };
 }

@@ -81,3 +81,13 @@ export function lookFromDelta(deltaX, deltaY, sensitivity = 0.005) {
 export function clampPitch(pitch, limit = Math.PI / 2 - 0.08) {
   return Math.min(Math.max(pitch, -limit), limit);
 }
+
+/** Unit look vector in field/3D space. yaw 0 looks toward -Z (top of the map). */
+export function lookDirection(yaw, pitch = 0) {
+  const cp = Math.cos(pitch);
+  return {
+    x: Math.sin(yaw) * cp,
+    y: Math.sin(pitch),
+    z: -Math.cos(yaw) * cp,
+  };
+}

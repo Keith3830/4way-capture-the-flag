@@ -14,12 +14,18 @@ const HOST = process.env.HOST || "0.0.0.0";
 const app = express();
 app.disable("x-powered-by");
 app.use((req, res, next) => {
-  res.setHeader("Cache-Control", "no-store");
+  if (req.path.startsWith("/vendor/")) {
+    res.setHeader("Cache-Control", "public, max-age=604800, immutable");
+  } else {
+    res.setHeader("Cache-Control", "no-store");
+  }
   next();
 });
 app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "4way-ctf", publicRooms: listPublic().length });
 });
+app.use("/vendor/three", express.static(path.join(ROOT, "node_modules/three")));
+app.use("/shared", express.static(path.join(ROOT, "shared")));
 app.use(express.static(path.join(ROOT, "client")));
 app.get("*", (_req, res) => {
   res.sendFile(path.join(ROOT, "client", "index.html"));

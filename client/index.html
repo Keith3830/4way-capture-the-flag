@@ -8,6 +8,13 @@
     <title>4 Way Capture the Flag by London Daly</title>
     <link rel="icon" href="/assets/logo.jpg" />
     <link rel="stylesheet" href="/css/style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/vendor/three/build/three.module.js"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="app">
@@ -102,16 +109,21 @@
             <div id="hud-status"></div>
           </div>
           <div id="hud-tools">
+            <button class="icon-btn" id="btn-view" type="button">Camera: Shoulder</button>
             <button class="icon-btn" id="btn-mute" type="button" aria-label="Mute">Sound on</button>
             <button class="icon-btn" id="btn-leave-game" type="button">Leave</button>
           </div>
         </div>
         <canvas id="field"></canvas>
+        <canvas id="view3d" class="hidden"></canvas>
+        <canvas id="minimap" width="168" height="168" aria-label="Mini-map"></canvas>
+        <canvas id="awareness" aria-hidden="true"></canvas>
         <div id="joystick" class="hidden" aria-label="Move">
           <div id="joystick-base"><div id="joystick-knob"></div></div>
         </div>
         <div id="look-pad" class="hidden" aria-label="Look"></div>
         <div id="touch-hint" class="hidden">Press and drag on the left side of the screen to run. Pickup, deposit, and tags happen when you reach them.</div>
+        <div id="look-hint" class="hidden">Click the field to look around with the mouse. On a phone, drag the right side to turn.</div>
       </section>
 
       <section id="screen-over" class="screen hidden">

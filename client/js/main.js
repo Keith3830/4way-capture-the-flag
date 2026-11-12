@@ -1,6 +1,8 @@
 import { connect } from "./net.js";
 import { createInput, haptic } from "./input.js";
 import { createRenderer } from "./render.js";
+import { createMinimap, createAwareness } from "./awareness.js";
+import { lookFromDelta, clampPitch } from "./stick-math.js";
 import { play, startMusic, toggleMute, isMuted, unlock } from "./audio.js";
 
 const TEAMS = ["red", "blue", "yellow", "pink"];
@@ -28,9 +30,17 @@ let lobby = null;
 let state = null;
 let chosenTeam = "red";
 let renderer = null;
+let view3d = null;
+let minimap = null;
+let awareness = null;
 let input = null;
 let lastSent = { dx: 0, dy: 0, at: 0 };
 let anim = 0;
+let viewMode = localStorage.getItem("ctf-view") || "third";
+let lookYaw = 0;
+let lookPitch = 0.08;
+let lookReady = false;
+let view3dFailed = false;
 
 function $(id) {
   return document.getElementById(id);
@@ -245,6 +255,7 @@ function leaveToMenu() {
   cancelAnimationFrame(anim);
   input?.hideJoystick();
   document.body.classList.remove("playing");
+  exitLook();
   myId = null;
   myToken = null;
   roomCode = null;
@@ -317,27 +328,117 @@ function onGameOver(msg) {
   }
   input?.hideJoystick();
   document.body.classList.remove("playing");
+  exitLook();
   show("over");
+}
+
+const VIEW_ORDER = ["third", "first", "classic"];
+const VIEW_LABEL = {
+  third: "Camera: Shoulder",
+  first: "Camera: First person",
+  classic: "Camera: Top-down",
+};
+
+function using3d() {
+  return viewMode === "first" || viewMode === "third";
+}
+
+function exitLook() {
+  if (document.pointerLockElement) {
+    try { document.exitPointerLock(); } catch { /* ignore */ }
+  }
+}
+
+function syncLookFromPlayer() {
+  const me = state?.players?.find((p) => p.id === myId);
+  if (!me || lookReady) return;
+  lookYaw = (me.angle || 0) + Math.PI / 2;
+  lookPitch = viewMode === "first" ? 0 : 0.08;
+  lookReady = true;
+}
+
+async function ensure3d() {
+  if (view3d || view3dFailed) return view3d;
+  try {
+    const mod = await import("./view3d.js");
+    view3d = mod.createView3d($("view3d"));
+    return view3d;
+  } catch (err) {
+    console.warn("3D view failed to start", err);
+    view3dFailed = true;
+    toast("3D view isn't available on this device. Using classic top-down.");
+    return null;
+  }
+}
+
+function applyViewMode(mode, { persist = true } = {}) {
+  if ((mode === "first" || mode === "third") && view3dFailed) mode = "classic";
+  viewMode = mode;
+  if (persist) localStorage.setItem("ctf-view", mode);
+  $("field").classList.toggle("hidden", using3d());
+  $("view3d").classList.toggle("hidden", !using3d());
+  $("btn-view").textContent = VIEW_LABEL[mode] || VIEW_LABEL.classic;
+  input?.setLookEnabled(using3d());
+  const touch = input?.usesTouch();
+  $("touch-hint").classList.toggle("hidden", !touch);
+  $("touch-hint").textContent = using3d()
+    ? "Left side: run. Right side: look and turn. Pickup, deposit, and tags happen when you reach them."
+    : "Press and drag on the left side of the screen to run. Pickup, deposit, and tags happen when you reach them.";
+  $("look-hint").classList.toggle("hidden", !using3d() || Boolean(touch));
+  if (!using3d()) exitLook();
+}
+
+let viewRequest = 0;
+async function setViewMode(mode) {
+  const id = ++viewRequest;
+  if (mode === "first" || mode === "third") {
+    const ok = await ensure3d();
+    if (id !== viewRequest) return;
+    if (!ok) mode = "classic";
+  }
+  if (id !== viewRequest) return;
+  applyViewMode(mode);
+  if (using3d()) view3d?.resize();
+  else renderer?.resize();
+  awareness?.resize();
+}
+
+function cycleView() {
+  const i = VIEW_ORDER.indexOf(viewMode);
+  const next = VIEW_ORDER[(i + 1) % VIEW_ORDER.length];
+  play("click");
+  setViewMode(next);
 }
 
 function enterGame() {
   show("game");
   document.body.classList.add("playing");
+  lookReady = false;
   const canvas = $("field");
   if (!renderer) renderer = createRenderer(canvas);
   else renderer.resize();
+  if (!minimap) minimap = createMinimap($("minimap"));
+  if (!awareness) awareness = createAwareness($("awareness"));
+  awareness.resize();
   if (!input) {
     input = createInput({
       moveZone: $("joystick"),
       base: $("joystick-base"),
       knob: $("joystick-knob"),
       lookZone: $("look-pad"),
-      getYaw: () => 0,
-      lookEnabled: () => false,
+      getYaw: () => (using3d() ? lookYaw : 0),
+      getPitch: () => lookPitch,
+      setLook: (yaw, pitch) => {
+        lookYaw = yaw;
+        lookPitch = pitch;
+      },
+      lookEnabled: () => using3d(),
     });
   }
   input.showJoystick();
-  $("touch-hint").classList.toggle("hidden", !input.usesTouch());
+  const wanted = localStorage.getItem("ctf-view") || "third";
+  setViewMode(wanted);
+  syncLookFromPlayer();
   updateHud();
   cancelAnimationFrame(anim);
   loop();
@@ -345,7 +446,15 @@ function enterGame() {
 
 function loop() {
   anim = requestAnimationFrame(loop);
-  if (renderer && state) renderer.frame(state, myId, state.now || 0);
+  if (state) {
+    syncLookFromPlayer();
+    const now = state.now || 0;
+    if (using3d() && view3d) view3d.frame(state, myId, now, { yaw: lookYaw, pitch: lookPitch, mode: viewMode });
+    else if (renderer) renderer.frame(state, myId, now);
+    minimap?.draw(state, myId);
+    const projector = using3d() && view3d ? view3d.project : renderer?.project;
+    awareness?.draw(state, myId, projector, now);
+  }
   const dir = input ? input.dir() : { dx: 0, dy: 0 };
   const t = performance.now();
   // Send immediately on change, and at least once per 40ms (~server tick) while held.
@@ -391,16 +500,40 @@ $("btn-mute").addEventListener("click", () => {
   const m = toggleMute();
   $("btn-mute").textContent = m ? "Sound off" : "Sound on";
 });
+$("btn-view").addEventListener("click", () => cycleView());
 
 window.addEventListener("pointerdown", () => unlock(), { once: true });
+
+$("view3d").addEventListener("click", () => {
+  if (!using3d() || input?.usesTouch()) return;
+  $("view3d").requestPointerLock?.();
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (!using3d() || document.pointerLockElement !== $("view3d")) return;
+  const turn = lookFromDelta(e.movementX, e.movementY, 0.0022);
+  lookYaw += turn.yawDelta;
+  lookPitch = clampPitch(lookPitch + turn.pitchDelta);
+});
+
+document.addEventListener("pointerlockchange", () => {
+  $("look-hint").classList.toggle(
+    "hidden",
+    !using3d() || Boolean(input?.usesTouch()) || document.pointerLockElement === $("view3d"),
+  );
+});
 
 window.__ctf = () => {
   const me = state?.players?.find((p) => p.id === myId) || null;
   return {
     myId,
     phase: state?.phase || null,
+    viewMode,
+    yaw: lookYaw,
+    pitch: lookPitch,
     dir: input ? input.dir() : { dx: 0, dy: 0 },
     held: input ? input.isHeld() : false,
-    player: me ? { id: me.id, x: me.x, y: me.y, team: me.team } : null,
+    player: me ? { id: me.id, x: me.x, y: me.y, team: me.team, angle: me.angle } : null,
   };
 };
+window.__ctfSetView = (mode) => setViewMode(mode);

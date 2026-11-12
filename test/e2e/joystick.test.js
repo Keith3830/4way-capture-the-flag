@@ -66,6 +66,8 @@ describe("on-screen joystick (mobile)", async () => {
     await page.click("#btn-solo");
     await page.click("#btn-setup-go");
     await waitForPlay(page);
+    await page.evaluate(() => window.__ctfSetView && window.__ctfSetView("classic"));
+    await page.waitForFunction(() => window.__ctf?.()?.viewMode === "classic", null, { timeout: 8000 });
   });
 
   after(async () => {

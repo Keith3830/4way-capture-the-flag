@@ -379,3 +379,64 @@ input:focus, select:focus {
   #hud-tools { justify-self: center; }
   #hud-timer { font-size: 1.3rem; }
 }
+
+#view3d {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  z-index: 0;
+}
+
+#field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+#minimap {
+  position: absolute;
+  right: 10px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  width: 132px;
+  height: 132px;
+  z-index: 5;
+  pointer-events: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+#awareness {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+#look-hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 4;
+  max-width: 80vw;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+  text-shadow: 0 1px 4px #000;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  #minimap {
+    width: 110px;
+    height: 110px;
+    right: 8px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  #hud-tools { flex-wrap: wrap; justify-content: center; }
+}
